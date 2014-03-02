@@ -44,7 +44,7 @@ class RuBifrost
     when Proxy
       {'__oid__' => obj.oid}
     when Hash
-      Hash.new[obj.each_pair.map { |key, val|
+      Hash[obj.each_pair.map { |key, val|
         [deproxify(key), deproxify(val)]
       }]
     when Enumerable
@@ -62,7 +62,9 @@ class RuBifrost
       if obj.has_key? "__oid__"
         Proxy.new obj["__oid__"], self
       else
-        Hash.new[obj.each_pair.map { |key, val| [proxify(key), proxify(val)] }]
+        Hash[obj.each_pair.map { |key, val|
+          [proxify(key), proxify(val)]
+        }]
       end
     when Enumerable
       obj.map { |item| proxify item }
