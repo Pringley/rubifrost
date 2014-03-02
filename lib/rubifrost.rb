@@ -42,11 +42,17 @@ class RuBifrost
     when Integer, Float, String, TrueClass, FalseClass, NilClass
       obj
     when Proxy
-      {'__oid__' => obj.oid}
+      {'__bf_oid__' => obj.oid}
     when Hash
-      Hash[obj.each_pair.map { |key, val|
-        [deproxify(key), deproxify(val)]
-      }]
+      if obj.each_key.map { |key| key.instance_of? String }.all?
+        Hash[obj.each_pair.map { |key, val|
+          [deproxify(key), deproxify(val)]
+        }]
+      else
+        {'__bf_dict__' => obj.each_pair.map { |key, val|
+          [deproxify(key), deproxify(val)]
+        }}
+      end
     when Enumerable
       obj.map { |item| deproxify item }
     else
@@ -59,8 +65,12 @@ class RuBifrost
     when Integer, Float, String, TrueClass, FalseClass, NilClass
       obj
     when Hash
-      if obj.has_key? "__oid__"
-        Proxy.new obj["__oid__"], self
+      if obj.has_key? "__bf_oid__"
+        Proxy.new obj["__bf_oid__"], self
+      elsif obj.has_key? "__bf_dict__"
+        Hash[obj["__bf_dict__"].map { |key, val|
+          [proxify(key), proxify(val)]
+        }]
       else
         Hash[obj.each_pair.map { |key, val|
           [proxify(key), proxify(val)]
